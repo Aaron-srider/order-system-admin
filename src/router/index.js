@@ -57,23 +57,18 @@ export const constantRoutes = [
   },
 
   {
-    path: '/example',
+    path: '/user',
     component: Layout,
-    redirect: '/example/table',
+    redirect: '/user/user',
     name: 'Example',
-    meta: { title: '商品管理', icon: 'el-icon-s-help' },
+    meta: { title: '用户管理', icon: 'el-icon-s-help' },
+    alwaysShow: false,
     children: [
       {
         path: 'table',
         name: 'Table',
-        component: () => import('@/views/table/index'),
-        meta: { title: 'Table', icon: 'table' }
-      },
-      {
-        path: 'tree',
-        name: 'Tree',
-        component: () => import('@/views/tree/index'),
-        meta: { title: 'Tree', icon: 'tree' }
+        component: () => import('@/views/user/index'),
+        meta: { title: '用户管理', icon: 'table' }
       }
     ]
   },
@@ -166,7 +161,8 @@ export const constantRoutes = [
 ]
 
 const createRouter = () => new Router({
-  // mode: 'history', // require service support
+  mode: 'history',
+  // require service support
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRoutes
 })
