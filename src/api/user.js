@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import * as userUtils from  '@/utils/userUtils'
 
 export function login(data) {
   return request({
@@ -24,15 +25,17 @@ export function logout() {
 }
 
 export function getAllUsers(page, user) {
+  console.log(user)
   return request({
     url: '/users',
     params: {
       size: page.size,
       current: page.current,
 
+      roleCategory: user.roleCategory,
       name: user.name,
       majorName: user.majorName,
-      className: user.className,
+      clazzName: user.className,
       studentId: user.studentId,
       secondaryDeptName: user.secondaryDeptName,
       jobId: user.jobId
@@ -49,3 +52,30 @@ export function lockUser(userId, destStatus) {
     // params: { token }
   })
 }
+
+export function updateUser(user) {
+  const data = {}
+
+  data.id=user.id
+  data.name=user.name
+  data.roleId=user.mainRole.id
+  data.collegeName=user.collegeName
+
+  if(userUtils.userCase(user.mainRole)=='student') {
+    data.majorName=user.majorName
+    data.clazzName=user.className
+    data.grade=user.grade
+    data.studentId=user.studentId
+  } else {
+    data.secondaryDeptName=user.secondaryDeptName
+    data.jobId=user.jobId
+  }
+
+  return request({
+    url: '/users',
+    method: 'put',
+    data
+  })
+}
+
+
