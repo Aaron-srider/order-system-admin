@@ -23,7 +23,7 @@ service.interceptors.request.use(
     // }
 
 
-    console.log("axios config:", config)
+    console.log("revoke api:", config.method + " " + config.url)
     return config
   },
   error => {
