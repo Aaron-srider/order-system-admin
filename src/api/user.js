@@ -62,7 +62,7 @@ export function updateUser(user) {
 
   if (userUtils.userCase(user.mainRole) == "student") {
     data.majorId = user.majorId;
-    data.classId = user.clazzId;
+    data.clazzName = user.clazzName;
     data.grade = user.grade;
     data.studentId = user.studentId;
   } else {

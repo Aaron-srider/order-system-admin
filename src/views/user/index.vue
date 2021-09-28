@@ -156,7 +156,8 @@
         <template slot-scope="scope">
           <el-tag :type="scope.row.isLock | statusIconFilter">{{
             scope.row.isLock | statusTextFilter
-          }}</el-tag>
+            }}
+          </el-tag>
         </template>
       </el-table-column>
 
@@ -204,18 +205,24 @@
       @pagination="fetchData"
     />
 
-    <!--:rules="updateDialog.rules"-->
+    <!--"-->
     <el-dialog title="update" :visible.sync="updateDialog.dialogFormVisible">
       <el-form
+        :rules="updateDialog.rules"
         ref="dataForm"
         :model="updateDialog.temp"
         label-position="left"
         label-width="70px"
         style="width: 400px; margin-left:50px;"
       >
-        <el-form-item label="用户姓名">
-          <el-input v-model="updateDialog.temp.name" placeholder="姓名" />
+        <el-form-item label="姓名" prop="name">
+          <el-input v-model="updateDialog.temp.name" placeholder="姓名"/>
         </el-form-item>
+
+
+        <!--<el-form-item label="班级" prop="clazz">-->
+        <!--<el-input v-model="updateDialog.temp.clazzName" placeholder="班级名称"/>-->
+        <!--</el-form-item>-->
 
         <el-form-item label="学院名称">
           <el-select
@@ -233,39 +240,11 @@
           </el-select>
         </el-form-item>
 
+
         <div v-if="userCase(updateDialog.temp.mainRole) == 'student'">
-          <el-form-item label="专业名称">
-            <el-select
-              v-model="updateDialog.temp.majorId"
-              placeholder="专业名称"
-              style="width: 130px"
-              class="filter-item"
-            >
-              <el-option
-                v-for="major in commonInfo.majorList"
-                :key="major.name"
-                :label="major.name"
-                :value="major.id"
-              />
-            </el-select>
+          <el-form-item label="班级" prop="clazzName">
+            <el-input v-model="updateDialog.temp.clazzName" placeholder="班级名称"/>
           </el-form-item>
-
-          <el-form-item label="班级名称">
-            <el-select
-              v-model="updateDialog.temp.clazzId"
-              placeholder="班级名称"
-              style="width: 130px"
-              class="filter-item"
-            >
-              <el-option
-                v-for="clazz in commonInfo.clazzList"
-                :key="clazz.name"
-                :label="clazz.name"
-                :value="clazz.id"
-              />
-            </el-select>
-          </el-form-item>
-
           <el-form-item label="年级">
             <el-select
               v-model="updateDialog.temp.grade"
@@ -282,7 +261,7 @@
             </el-select>
           </el-form-item>
 
-          <el-form-item label="学号">
+          <el-form-item label="学号" prop="studentId">
             <el-input
               v-model="updateDialog.temp.studentId"
               placeholder="学号"
@@ -307,8 +286,8 @@
             </el-select>
           </el-form-item>
 
-          <el-form-item label="工号">
-            <el-input v-model="updateDialog.temp.jobId" placeholder="工号" />
+          <el-form-item label="工号" prop="jobId">
+            <el-input v-model="updateDialog.temp.jobId" placeholder="工号"/>
           </el-form-item>
         </div>
 
@@ -353,283 +332,292 @@
 </template>
 
 <script>
-import * as userUtils from "@/utils/userUtils.js";
-import * as userApi from "@/api/user";
-import * as commonInfoApi from "@/api/commonInfo.js";
-import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
+  import * as userUtils from "@/utils/userUtils.js";
+  import * as userApi from "@/api/user";
+  import * as commonInfoApi from "@/api/commonInfo.js";
+  import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
 
-export default {
-  filters: {
-    statusIconFilter(isLock) {
-      return isLock == 1 ? "danger" : "success";
-    },
-    statusTextFilter(isLock) {
-      return isLock == 1 ? "锁定" : "可用";
-    }
-  },
-  components: { Pagination },
-  data() {
-    return {
-      /**
-       * 通用信息：课程列表，专业列表，部门列表，年级列表
-       */
-      commonInfo: {
-        collegeList: [],
-        majorList: [],
-        secondaryDeptList: [],
-        gradeList: userUtils.gradeMap
+  export default {
+    filters: {
+      statusIconFilter(isLock) {
+        return isLock == 1 ? "danger" : "success";
       },
-      updateDialog: {
-        dialogFormVisible: false,
-        rules: {
-          type: [
-            { required: true, message: "type is required", trigger: "change" }
-          ],
-          timestamp: [
-            {
-              type: "date",
-              required: true,
-              message: "timestamp is required",
-              trigger: "change"
-            }
-          ],
-          title: [
-            { required: true, message: "title is required", trigger: "blur" }
-          ]
-        },
-        temp: {
-          id: undefined,
-          mainRole: { id: 1 },
-          importance: 1,
-          remark: "",
-          timestamp: new Date(),
-          title: "",
-          type: "",
-          status: "published",
-          collegeId: 1,
-          majorId: undefined,
-          clazzId: undefined,
-          grade: undefined
-        }
-      },
-      listQuery: {
-        userType: "student",
-        user: {
-          roleCategory: "",
-
-          name: "",
-          major: "",
-          clazz: "",
-          studentId: "",
-
-          secondaryDept: "",
-          jobId: ""
-        }
-      },
-      page: {
-        current: 1,
-        total: 0,
-        size: 10
-      },
-      list: [
-        {
-          name: "文超",
-          collegeName: "计算机学院",
-          role: "本科生",
-          isLock: 1,
-          majorName: "软件工程"
-        }
-      ],
-      userTypes: ["student", "teacher", "all"]
-    };
-  },
-  created() {
-    this.fetchData();
-  },
-  methods: {
-    userGradeMap(grade) {
-      return userUtils.userGradeMap(grade);
-    },
-    userCase(role) {
-      return userUtils.userCase(role);
-    },
-    updateData() {
-      const tempData = Object.assign({}, this.updateDialog.temp);
-      // 选出用户的一个角色作为代表性角色
-
-      userApi.updateUser(tempData).then(
-        (res) => {
-          // 只更新页面中的指定行
-          const index = this.list.findIndex(v => {
-            return v.id === this.updateDialog.temp.id;
-          });
-          const updatedUser = res.data
-          let user = {}
-          this.handleUser(updatedUser, user)
-          this.list.splice(index, 1, user);
-          // 关闭弹窗
-          this.updateDialog.dialogFormVisible = false;
-          // 显示成功
-          this.$notify({
-            title: "Success",
-            message: "Update Successfully",
-            type: "success",
-            duration: 2000
-          });
-        },
-        err => {
-          console.log(err);
-          // this.$notify({
-          //   title: 'Fail',
-          //   message: 'Unknown Error',
-          //   type: 'fail',
-          //   duration: 2000
-          // })
-        }
-      );
-    },
-    handleUpdate(row) {
-      // 将该行记录更新到temp
-
-      this.updateDialog.temp = Object.assign({}, row);
-
-      // 显示对话框
-      this.updateDialog.dialogFormVisible = true;
-      // 清除表单验证
-      // this.$nextTick(() => {
-      //   this.$refs['dataForm'].clearValidate()
-      // })
-    },
-    handleChange() {
-      this.listQuery.user.studentId = this.listQuery.user.jobId;
-    },
-    handleSizeChange(val) {
-      this.page.size = val;
-      this.fetchData();
-    },
-    handleCurrentChange(val) {
-      this.page.current = val;
-      this.fetchData();
-    },
-
-    handleFilter() {
-      this.fetchData();
-    },
-    parseUser() {
-      let page = {};
-      if (!this.page) {
-        page = { size: 5, current: 1 };
-      } else {
-        page = this.page;
+      statusTextFilter(isLock) {
+        return isLock == 1 ? "锁定" : "可用";
       }
-
-      const user = {
-        name: this.listQuery.user.name
-      };
-
-      user.roleCategory = this.listQuery.userType;
-      if (this.listQuery.userType === "student") {
-        user.majorName = this.listQuery.user.major;
-        user.className = this.listQuery.user.clazz;
-        user.studentId = this.listQuery.user.studentId;
-      } else if (this.listQuery.userType === "teacher") {
-        user.secondaryDeptName = this.listQuery.user.secondaryDept;
-        user.jobId = this.listQuery.user.jobId;
-      } else if (this.listQuery.userType === "all") {
-        user.studentId = this.listQuery.user.studentId;
-        user.jobId = this.listQuery.user.jobId;
-      }
-
+    },
+    components: {Pagination},
+    data() {
       return {
-        page,
-        user
+        /**
+         * 通用信息：课程列表，专业列表，部门列表，年级列表
+         */
+        commonInfo: {
+          collegeList: [],
+          majorList: [],
+          secondaryDeptList: [],
+          gradeList: userUtils.gradeMap
+        },
+        updateDialog: {
+          dialogFormVisible: false,
+          rules: {
+            studentId: [
+              {required: true, message: "学号不能为空", trigger: "change"}
+            ],
+            jobId: [
+              {required: true, message: "工号不能为空", trigger: "change"}
+            ],
+            name: [
+              {required: true, message: "姓名不能为空", trigger: "change"}
+            ],
+            clazzName: [
+              {required: true, message: "班级不能为空", trigger: "change"}
+            ]
+          },
+          temp: {
+            id: undefined,
+            mainRole: {id: 1},
+            importance: 1,
+            remark: "",
+            timestamp: new Date(),
+            title: "",
+            type: "",
+            status: "published",
+            collegeId: 1,
+            majorId: undefined,
+            clazzId: undefined,
+            grade: undefined
+          }
+        },
+        listQuery: {
+          userType: "student",
+          user: {
+            roleCategory: "",
+
+            name: "",
+            major: "",
+            clazz: "",
+            studentId: "",
+
+            secondaryDept: "",
+            jobId: ""
+          }
+        },
+        page: {
+          current: 1,
+          total: 0,
+          size: 10
+        },
+        list: [
+          {
+            name: "文超",
+            collegeName: "计算机学院",
+            role: "本科生",
+            isLock: 1,
+            majorName: "软件工程"
+          }
+        ],
+        userTypes: ["student", "teacher", "all"]
       };
     },
-    handleUser(src, des) {
-      const basicInfo = src.result;
-      const detailInfo = src.detailInfo;
-      des.id = basicInfo.id;
-      des.name = basicInfo.name;
-      if (detailInfo.college) {
-        des.collegeName = detailInfo.college.name;
-        des.collegeId = detailInfo.college.id;
-      }
-      if (detailInfo.major) {
-        des.majorName = detailInfo.major.name;
-        des.majorId = detailInfo.major.id;
-      }
-      if (detailInfo["class"]) {
-        des.clazzName = detailInfo["class"].name;
-        des.clazzId = detailInfo["class"].id;
-      }
-      if (detailInfo.secondaryDept) {
-        des.secondaryDeptName = detailInfo.secondaryDept.name;
-        des.secondaryDeptId = detailInfo.secondaryDept.id;
-      }
-      if (basicInfo.grade) {
-        des.grade = basicInfo.grade;
-      }
-      if (basicInfo.studentId) {
-        des.studentId = basicInfo.studentId;
-      }
-      if (basicInfo.jobId) {
-        des.jobId = basicInfo.jobId;
-      }
-      des.roleList = detailInfo.roleList;
-      des.isLock = basicInfo.isLock;
-      des.mainRole = userUtils.pickMainUserRole(user.roleList);
+    created() {
+      this.fetchData();
     },
-    handleUserList(userList) {
+    methods: {
+      userGradeMap(grade) {
+        return userUtils.userGradeMap(grade);
+      },
+      userCase(role) {
+        return userUtils.userCase(role);
+      },
+      updateData() {
 
-      const resultList = [];
-      for (const userFromServer of userList) {
-        let user={}
-        debugger
-        this.handleUser(userFromServer, user)
-        resultList.push(user);
-      }
-      return resultList;
-    },
-    fetchData() {
-      // 拉取用户列表
-      const { page, user } = this.parseUser();
+        this.$refs['dataForm'].validate((valid) => {
+          if (valid) {
+            const tempData = Object.assign({}, this.updateDialog.temp);
+            // 选出用户的一个角色作为代表性角色
 
-      // this.listLoading = true
-      userApi
-        .getAllUsers(page, user)
-        .then(
-          res => {
-            const userList = res.data.result;
-            const detailInfo = res.data.detailInfo;
-            // 改变列表
-            this.list = this.handleUserList(userList);
-            this.page.total = detailInfo.total;
+            userApi.updateUser(tempData).then(
+              (res) => {
+                // 只更新页面中的指定行
+                const index = this.list.findIndex(v => {
+                  return v.id === this.updateDialog.temp.id;
+                });
+                const updatedUser = res.data
+                let user = {}
+                this.handleUser(updatedUser, user)
+                this.list.splice(index, 1, user);
+                // 关闭弹窗
+                this.updateDialog.dialogFormVisible = false;
+                // 显示成功
+                this.$notify({
+                  title: "Success",
+                  message: "Update Successfully",
+                  type: "success",
+                  duration: 2000
+                });
+              },
+              err => {
+                console.log(err);
+                // this.$notify({
+                //   title: 'Fail',
+                //   message: 'Unknown Error',
+                //   type: 'fail',
+                //   duration: 2000
+                // })
+              }
+            );
 
-            // this.list = response.data.items
-            // this.listLoading = false
-          },
-          err => {
-            console.log("err", err);
           }
-        )
-        .catch(reject => {
-          console.log("err occurred in userApi.getAllUsers(page, user)", reject);
+        })
+
+
+      },
+      handleUpdate(row) {
+        // 将该行记录更新到temp
+
+        this.updateDialog.temp = Object.assign({}, row);
+
+        // 显示对话框
+        this.updateDialog.dialogFormVisible = true;
+        // 清除表单验证
+        // this.$nextTick(() => {
+        //   this.$refs['dataForm'].clearValidate()
+        // })
+      },
+      handleChange() {
+        this.listQuery.user.studentId = this.listQuery.user.jobId;
+      },
+      handleSizeChange(val) {
+        this.page.size = val;
+        this.fetchData();
+      },
+      handleCurrentChange(val) {
+        this.page.current = val;
+        this.fetchData();
+      },
+
+      handleFilter() {
+        this.fetchData();
+      },
+      parseUser() {
+        let page = {};
+        if (!this.page) {
+          page = {size: 5, current: 1};
+        } else {
+          page = this.page;
+        }
+
+        const user = {
+          name: this.listQuery.user.name
+        };
+
+        user.roleCategory = this.listQuery.userType;
+        if (this.listQuery.userType === "student") {
+          user.majorName = this.listQuery.user.major;
+          user.className = this.listQuery.user.clazz;
+          user.studentId = this.listQuery.user.studentId;
+        } else if (this.listQuery.userType === "teacher") {
+          user.secondaryDeptName = this.listQuery.user.secondaryDept;
+          user.jobId = this.listQuery.user.jobId;
+        } else if (this.listQuery.userType === "all") {
+          user.studentId = this.listQuery.user.studentId;
+          user.jobId = this.listQuery.user.jobId;
+        }
+
+        return {
+          page,
+          user
+        };
+      },
+      /**
+       * 传入后端发送过来的user数据结构，将其按照下述规则映射到前端数据结构
+       * @param src
+       * @param user
+       */
+      handleUser(src, user) {
+        const basicInfo = src.result;
+        const detailInfo = src.detailInfo;
+        user.id = basicInfo.id;
+        user.name = basicInfo.name;
+        if (detailInfo.college) {
+          user.collegeName = detailInfo.college.name;
+          user.collegeId = detailInfo.college.id;
+        }
+        if (detailInfo.major) {
+          user.majorName = detailInfo.major.name;
+          user.majorId = detailInfo.major.id;
+        }
+        if (basicInfo["clazzName"]) {
+          user.clazzName = basicInfo["clazzName"]
+        }
+        if (detailInfo.secondaryDept) {
+          user.secondaryDeptName = detailInfo.secondaryDept.name;
+          user.secondaryDeptId = detailInfo.secondaryDept.id;
+        }
+        if (basicInfo.grade) {
+          user.grade = basicInfo.grade;
+        }
+        if (basicInfo.studentId) {
+          user.studentId = basicInfo.studentId;
+        }
+        if (basicInfo.jobId) {
+          user.jobId = basicInfo.jobId;
+        }
+        user.roleList = detailInfo.roleList;
+        user.isLock = basicInfo.isLock;
+        user.mainRole = userUtils.pickMainUserRole(user.roleList);
+      },
+      handleUserList(userList) {
+
+        const resultList = [];
+        for (const userFromServer of userList) {
+          let user = {}
+          this.handleUser(userFromServer, user)
+          resultList.push(user);
+        }
+        return resultList;
+      },
+      fetchData() {
+        // 拉取用户列表
+        const {page, user} = this.parseUser();
+
+        // this.listLoading = true
+        userApi
+          .getAllUsers(page, user)
+          .then(
+            res => {
+              const userList = res.data.result;
+              const detailInfo = res.data.detailInfo;
+              // 改变列表
+              this.list = this.handleUserList(userList);
+              this.page.total = detailInfo.total;
+
+              // this.list = response.data.items
+              // this.listLoading = false
+            },
+            err => {
+              console.log("err", err);
+            }
+          )
+          .catch(reject => {
+            console.log("err occurred in userApi.getAllUsers(page, user)", reject);
+          });
+
+        commonInfoApi.getCommonInfo().then(res => {
+          this.commonInfo.collegeList = res.data.collegeList;
+          this.commonInfo.majorList = res.data.majorList;
+          this.commonInfo.clazzList = res.data.clazzList;
+          this.commonInfo.secondaryDeptList = res.data.secondaryDeptList;
         });
+      },
 
-      commonInfoApi.getCommonInfo().then(res => {
-        this.commonInfo.collegeList = res.data.collegeList;
-        this.commonInfo.majorList = res.data.majorList;
-        this.commonInfo.clazzList = res.data.clazzList;
-        this.commonInfo.secondaryDeptList = res.data.secondaryDeptList;
-      });
-    },
-
-    handleLockStatue(rowData, destStatus) {
-      const userId = rowData.id;
-      userApi.lockUser(userId, destStatus).then(() => {
-        rowData.isLock = destStatus;
-      });
+      handleLockStatue(rowData, destStatus) {
+        const userId = rowData.id;
+        userApi.lockUser(userId, destStatus).then(() => {
+          rowData.isLock = destStatus;
+        });
+      }
     }
-  }
-};
+  };
 </script>

@@ -65,10 +65,27 @@ export const constantRoutes = [
     alwaysShow: false,
     children: [
       {
-        path: 'table',
+        path: 'user',
         name: 'Table',
         component: () => import('@/views/user/index'),
         meta: { title: '用户管理', icon: 'table' }
+      }
+    ]
+  },
+
+  {
+    path: '/workOrder',
+    component: Layout,
+    redirect: '/workOrder/list',
+    name: 'Example',
+    meta: { title: '工单管理', icon: 'el-icon-s-help' },
+    alwaysShow: false,
+    children: [
+      {
+        path: 'list',
+        name: 'Table',
+        component: () => import('@/views/workOrder/index.vue'),
+        meta: { title: '工单管理', icon: 'table' }
       }
     ]
   },
