@@ -28,7 +28,7 @@
       <el-date-picker
         v-model="listQuery.startDate"
         type="datetime"
-        placeholder="开始时间">
+        placeholder="">
       </el-date-picker>
       ~
 
@@ -63,7 +63,7 @@
       </el-table-column>
       <el-table-column label="发起者姓名" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.InitiatorName }}</span>
+          <span>{{ scope.row.initiatorName }}</span>
         </template>
       </el-table-column>
       <el-table-column label="工单标题" align="center">
@@ -71,15 +71,11 @@
           <span>{{ scope.row.workOrderTitle }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="工单状态" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.workOrderStatus }}</span>
-        </template>
-      </el-table-column>
+
 
       <el-table-column label="创建时间" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.createDate }}</span>
+          <span>{{ scope.row.createTime }}</span>
         </template>
       </el-table-column>
 

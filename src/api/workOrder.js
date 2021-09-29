@@ -2,10 +2,11 @@ import request from "@/utils/request";
 // import * as userUtils from "@/utils/userUtils";
 
 export function getAllWorkOrders(data) {
+  // debugger
   return request({
     url: "/admin/workOrders",
-    method: "post",
-    data
+    method: "get",
+    params:data
   });
 }
 

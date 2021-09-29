@@ -1,10 +1,15 @@
 import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
+import * as workOrderApi from "@/api/workOrder.js"; // secondary package based on el-pagination
+import {parseTime} from "@/utils/index.js"; // secondary package based on el-pagination
 
 let that;
 export default {
+  onCreate() {
+    this.fetchData();
+  },
 
-  beforeCreate(){
-    that=this
+  beforeCreate() {
+    that = this
   },
 
   filters: {
@@ -19,7 +24,7 @@ export default {
      */
     statusTextFilter(workOrderStatus) {
       for (let commonInfo_status of that.commonInfo.workOrderStatusList) {
-        if(commonInfo_status.code==workOrderStatus) {
+        if (commonInfo_status.code == workOrderStatus) {
           return commonInfo_status.text
         }
       }
@@ -32,7 +37,7 @@ export default {
      * @returns 返回工单状态对应的icon类型字符串
      */
     statusIconFilter(workOrderStatus) {
-      const iconMap ={
+      const iconMap = {
         0: '',
         1: 'success',
         2: 'danger',
@@ -112,10 +117,10 @@ export default {
         }
       },
       listQuery: {
-        workOrderId: 1,
-        student_job_id: "20923423",
-        startDate: "2021-02-11 12:21:30",
-        endDate: "2021-02-11 12:21:11"
+        workOrderId: undefined,
+        student_job_id: undefined,
+        startDate: undefined,
+        endDate: undefined
       },
       page: {
         current: 1,
@@ -127,19 +132,19 @@ export default {
           workOrderId: 1,
           //流程名字
           workOrderType: "GPU申请工单",
-          InitiatorName: "文超",
+          initiatorName: "文超",
           workOrderTitle: "申请gpu",
           workOrderStatus: 0,
-          createDate: "2021-02-11 12:21:30"
+          createTime: "2021-02-11 12:21:30"
         },
         {
           workOrderId: 2,
           //流程名字
           workOrderType: "GPU申请工单",
-          InitiatorName: "邢铖",
+          initiatorName: "邢铖",
           workOrderTitle: "申请gpu",
           workOrderStatus: 0,
-          createDate: "2021-02-21 12:21:30"
+          createTime: "2021-02-21 12:21:30"
         }
       ],
       userTypes: ["student", "teacher", "all"]
@@ -186,6 +191,7 @@ export default {
       this.fetchData();
     },
     handleFilter() {
+      this.fetchData()
     },
     parseUser() {
       let page = {};
@@ -217,59 +223,67 @@ export default {
         user
       };
     },
-    /**
-     * 传入后端发送过来的user数据结构，将其按照下述规则映射到前端数据结构
-     * @param src
-     * @param user
-     */
-    handleUser(src, user) {
-      const basicInfo = src.result;
-      const detailInfo = src.detailInfo;
-      user.id = basicInfo.id;
-      user.name = basicInfo.name;
-      if (detailInfo.college) {
-        user.collegeName = detailInfo.college.name;
-        user.collegeId = detailInfo.college.id;
-      }
-      if (detailInfo.major) {
-        user.majorName = detailInfo.major.name;
-        user.majorId = detailInfo.major.id;
-      }
-      if (basicInfo["clazzName"]) {
-        user.clazzName = basicInfo["clazzName"]
-      }
-      if (detailInfo.secondaryDept) {
-        user.secondaryDeptName = detailInfo.secondaryDept.name;
-        user.secondaryDeptId = detailInfo.secondaryDept.id;
-      }
-      if (basicInfo.grade) {
-        user.grade = basicInfo.grade;
-      }
-      if (basicInfo.studentId) {
-        user.studentId = basicInfo.studentId;
-      }
-      if (basicInfo.jobId) {
-        user.jobId = basicInfo.jobId;
-      }
-      user.roleList = detailInfo.roleList;
-      user.isLock = basicInfo.isLock;
-      user.mainRole = userUtils.pickMainUserRole(user.roleList);
-    },
-    handleUserList(userList) {
-
-      const resultList = [];
-      for (const userFromServer of userList) {
-        let user = {}
-        this.handleUser(userFromServer, user)
-        resultList.push(user);
-      }
-      return resultList;
-    },
-
 
     fetchData() {
+//
+      const query = Object.assign({}, this.listQuery)
+
+      if (query.startDate) {
+        query.startDate = parseTime(query.startDate)
+      }
+      if (query.endDate) {
+        query.endDate = parseTime(query.endDate)
+      }
+
+      query.id = this.listQuery.workOrderId
+
+      query.current = this.page.current
+
+      query.size = this.page.size
 
 
+      workOrderApi.getAllWorkOrders(query)
+        .then((res) => {
+            //
+            if (res.code == 500) {
+              console.log(res)
+            } else if (res.code == 200) {
+              console.log(res)
+              const pageRes = res.data.result;
+
+
+              this.page.total = pageRes.total
+
+              const workOrderList = pageRes.records
+
+              this.list = this.handlePageRecords(workOrderList)
+            } else {
+              console.log(res.message)
+            }
+          },
+          (err) => {
+            console.log(err)
+          })
+
+    },
+
+    handlePageRecords(workOrderList) {
+
+      const resultList = []
+      for (let item of workOrderList) {
+        const result = item.result
+        const detailInfo = item.detailInfo
+        const workOrder = {}
+        workOrder.workOrderId = result.id
+        workOrder.workOrderType = detailInfo.flow.result.name
+        workOrder.initiatorName = detailInfo.initiator.result.name
+        workOrder.workOrderTitle = result.title
+        workOrder.workOrderStatus = result.status
+        workOrder.createTime = result.createTime
+        resultList.push(workOrder)
+      }
+
+      return resultList
     },
 
     handleLockStatue(rowData, destStatus) {
