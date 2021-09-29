@@ -88,16 +88,16 @@
       </el-table-column>
 
 
-      <!--<el-table-column-->
-        <!--label="Actions"-->
-        <!--align="center"-->
-        <!--width="230"-->
-        <!--class-name="small-padding fixed-width"-->
-      <!--&gt;-->
-        <!--<template slot-scope="{ row, $index }">-->
-          <!--<el-button type="primary" size="mini" @click="handleUpdate(row)">-->
-            <!--修改-->
-          <!--</el-button>-->
+      <el-table-column
+        label="Actions"
+        align="center"
+        width="230"
+        class-name="small-padding fixed-width"
+      >
+        <template slot-scope="{ row, $index }">
+          <el-button type="danger" size="mini" @click="handleWorkOrderDelete(row)">
+            删除
+          </el-button>
           <!--<el-button-->
             <!--v-if="row.isLock == 1"-->
             <!--size="mini"-->
@@ -114,8 +114,8 @@
           <!--&gt;-->
             <!--锁定-->
           <!--</el-button>-->
-        <!--</template>-->
-      <!--</el-table-column>-->
+        </template>
+      </el-table-column>
 
       <!--<el-user-column align="center" prop="created_at" label="Display_time" width="200">-->
       <!--<template slot-scope="scope">-->

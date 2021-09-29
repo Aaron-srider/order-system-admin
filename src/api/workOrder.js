@@ -10,3 +10,14 @@ export function getAllWorkOrders(data) {
   });
 }
 
+export function deleteAllWorkOrdersByIdList(idList) {
+  // debugger
+  return request({
+    url: "/admin/workOrders",
+    method: "delete",
+    data:{
+      idList
+    }
+  });
+}
+

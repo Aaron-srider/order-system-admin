@@ -190,6 +190,18 @@ export default {
       this.page.current = val;
       this.fetchData();
     },
+    handleWorkOrderDelete(row) {
+      const id = row.workOrderId
+      const idList=[]
+      // debugger
+      idList.push(id)
+      workOrderApi.deleteAllWorkOrdersByIdList(idList)
+        .then(res => {
+          console.log(res)
+          const delIndex=this.list.findIndex((workOrder) => workOrder.workOrderId==id)
+          this.list.splice(delIndex,1)
+        })
+    },
     handleFilter() {
       this.fetchData()
     },
@@ -200,7 +212,6 @@ export default {
       } else {
         page = this.page;
       }
-
       const user = {
         name: this.listQuery.user.name
       };
