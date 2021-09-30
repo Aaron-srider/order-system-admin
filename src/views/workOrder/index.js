@@ -19,12 +19,12 @@ export default {
 
     /**
      * 根据工单状态代码返回相应的文本
-     * @param workOrderStatus 工单状态代码（code）
+     * @param workOrderStatus 工单状态代码（value）
      * @returns 返回工单状态对应的文本（text）
      */
     statusTextFilter(workOrderStatus) {
       for (let commonInfo_status of that.commonInfo.workOrderStatusList) {
-        if (commonInfo_status.code == workOrderStatus) {
+        if (commonInfo_status.value == workOrderStatus) {
           return commonInfo_status.text
         }
       }
@@ -33,7 +33,7 @@ export default {
 
     /**
      * 根据工单状态代码返回相应的icon类型（类型字符串由el组件规定）
-     * @param workOrderStatus 工单状态代码（code）
+     * @param workOrderStatus 工单状态代码（value）
      * @returns 返回工单状态对应的icon类型字符串
      */
     statusIconFilter(workOrderStatus) {
@@ -41,7 +41,8 @@ export default {
         0: '',
         1: 'success',
         2: 'danger',
-        3: 'warning'
+        3: 'warning',
+        4: 'info'
       }
       return iconMap[workOrderStatus]
     }
@@ -61,27 +62,33 @@ export default {
         workOrderStatusList: [
           {
             id: 0,
-            code: 0,
-            value: "approving",
+            value: 0,
+            alias: "BEING_EXAMINED",
             text: "在审"
           },
           {
             id: 1,
-            code: 1,
-            value: "pass",
+            value: 1,
+            alias: "COMPLETED_SUCCESSFULLY",
             text: "顺利通过"
           },
           {
             id: 2,
-            code: 2,
-            value: "reject",
+            value: 2,
+            alias: "NOT_APPROVED",
             text: "不通过"
           },
           {
             id: 3,
-            code: 3,
-            value: "revoke",
+            value: 3,
+            alias: "BEEN_WITHDRAWN",
             text: "被撤回"
+          },
+          {
+            id: 4,
+            value: 4,
+            alias: "INVALIDATION",
+            text: "作废"
           }
         ]
       },
@@ -135,7 +142,8 @@ export default {
           initiatorName: "文超",
           workOrderTitle: "申请gpu",
           workOrderStatus: 0,
-          createTime: "2021-02-11 12:21:30"
+          createTime: "2021-02-11 12:21:30",
+          isFinished: 0
         },
         {
           workOrderId: 2,
@@ -144,7 +152,8 @@ export default {
           initiatorName: "邢铖",
           workOrderTitle: "申请gpu",
           workOrderStatus: 0,
-          createTime: "2021-02-21 12:21:30"
+          createTime: "2021-02-21 12:21:30",
+          isFinished: 0
         }
       ],
       userTypes: ["student", "teacher", "all"]
@@ -154,6 +163,37 @@ export default {
     this.fetchData();
   },
   methods: {
+
+    handleWorkOrderInvalidation(row) {
+      //如果工单结束，无法作废
+      if (row.isFinished == 1) {
+        this.$message({
+          message: '工单已经结束，无法作废',
+          type: 'warning'
+        });
+      } else {
+        workOrderApi.invalidateWorkOrder(row.workOrderId)
+          .then((res) => {
+
+
+            const index = this.list.findIndex((item) => item.workOrderStatus==row.workOrderStatus)
+
+
+            const invaliatedWorkOrder=Object.assign(
+              {}, row
+            )
+            invaliatedWorkOrder.workOrderStatus=4
+            invaliatedWorkOrder.isFinished=1
+
+            this.list.splice(index, 1, invaliatedWorkOrder)
+
+            this.$message({
+              message: '作废成功',
+              type: 'success'
+            });
+          })
+      }
+    },
     userGradeMap(grade) {
 
     },
@@ -192,14 +232,14 @@ export default {
     },
     handleWorkOrderDelete(row) {
       const id = row.workOrderId
-      const idList=[]
-      // debugger
+      const idList = []
+      //
       idList.push(id)
       workOrderApi.deleteAllWorkOrdersByIdList(idList)
         .then(res => {
           console.log(res)
-          const delIndex=this.list.findIndex((workOrder) => workOrder.workOrderId==id)
-          this.list.splice(delIndex,1)
+          const delIndex = this.list.findIndex((workOrder) => workOrder.workOrderId == id)
+          this.list.splice(delIndex, 1)
         })
     },
     handleFilter() {
@@ -267,7 +307,7 @@ export default {
 
               const workOrderList = pageRes.records
 
-              this.list = this.handlePageRecords(workOrderList)
+              this.list = this.handleWorkOrderPage(workOrderList)
             } else {
               console.log(res.message)
             }
@@ -278,7 +318,7 @@ export default {
 
     },
 
-    handlePageRecords(workOrderList) {
+    handleWorkOrderPage(workOrderList) {
 
       const resultList = []
       for (let item of workOrderList) {
@@ -291,6 +331,7 @@ export default {
         workOrder.workOrderTitle = result.title
         workOrder.workOrderStatus = result.status
         workOrder.createTime = result.createTime
+        workOrder.isFinished = result.isFinished
         resultList.push(workOrder)
       }
 

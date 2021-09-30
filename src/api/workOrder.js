@@ -21,3 +21,11 @@ export function deleteAllWorkOrdersByIdList(idList) {
   });
 }
 
+export function invalidateWorkOrder(workOrderId) {
+  // debugger
+  return request({
+    url: `/admin/workOrder/cancellation/${workOrderId}`,
+    method: "put"
+  });
+}
+

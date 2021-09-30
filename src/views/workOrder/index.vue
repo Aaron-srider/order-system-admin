@@ -98,6 +98,10 @@
           <el-button type="danger" size="mini" @click="handleWorkOrderDelete(row)">
             删除
           </el-button>
+
+          <el-button type="warning" size="mini" @click="handleWorkOrderInvalidation(row)">
+            作废
+          </el-button>
           <!--<el-button-->
             <!--v-if="row.isLock == 1"-->
             <!--size="mini"-->
