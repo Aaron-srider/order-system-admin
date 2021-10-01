@@ -99,7 +99,7 @@
             删除
           </el-button>
 
-          <el-button type="warning" size="mini" @click="handleWorkOrderInvalidation(row)">
+          <el-button type="danger" size="mini" @click="handleWorkOrderInvalidation(row)">
             作废
           </el-button>
           <!--<el-button-->

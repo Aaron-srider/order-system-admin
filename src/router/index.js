@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import store from '@/store'
 
 Vue.use(Router)
 
@@ -34,6 +35,41 @@ export const constantRoutes = [
   {
     path: '/login',
     component: () => import('@/views/login/index'),
+    beforeEnter: (to, from, next) => {
+      const code = to.query.code
+      if (!code) {
+        next()
+      } else {
+
+        store.dispatch('user/login', code).then((res) => {
+          console.log("login success")
+          console.log("now redirect to : " + "/dashboard")
+          next("/dashboard")
+        }, (err) => {
+          let errMsg = ""
+          if (err.code == 101) {
+            errMsg = "您的信息未完善"
+          } else if (err.code == 116) {
+            errMsg = "您未在小程序注册过"
+          }
+          else if (err.code == 112) {
+            errMsg = "您不是管理员"
+          } else if (err.code == 119) {
+            errMsg = "您的账户已锁定"
+          }
+          next(`/login?errMsg=${errMsg}`)
+        })
+
+        // try{
+        //   const response = await store.dispatch('user/login', code)
+        //   console.log("login success")
+        //   console.log("now redirect to : " + "/dashboard")
+        //   next("/dashboard")
+        // }catch (e) {
+        //   console.log(e)
+        // }
+      }
+    },
     hidden: true
   },
 
@@ -41,7 +77,7 @@ export const constantRoutes = [
     path: '/404',
     component: () => import('@/views/404'),
     hidden: false,
-    meta: { title: '404', icon: 'dashboard' }
+    meta: {title: '404', icon: 'dashboard'}
   },
 
   {
@@ -52,7 +88,7 @@ export const constantRoutes = [
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: { title: '后台管理系统', icon: 'dashboard' }
+      meta: {title: '后台管理系统', icon: 'dashboard'}
     }]
   },
 
@@ -61,14 +97,14 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/user/user',
     name: 'Example',
-    meta: { title: '用户管理', icon: 'el-icon-s-help' },
+    meta: {title: '用户管理', icon: 'el-icon-s-help'},
     alwaysShow: false,
     children: [
       {
         path: 'user',
         name: 'Table',
         component: () => import('@/views/user/index'),
-        meta: { title: '用户管理', icon: 'table' }
+        meta: {title: '用户管理', icon: 'table'}
       }
     ]
   },
@@ -78,14 +114,14 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/workOrder/list',
     name: 'Example',
-    meta: { title: '工单管理', icon: 'el-icon-s-help' },
+    meta: {title: '工单管理', icon: 'el-icon-s-help'},
     alwaysShow: false,
     children: [
       {
         path: 'list',
         name: 'Table',
         component: () => import('@/views/workOrder/index.vue'),
-        meta: { title: '工单管理', icon: 'table' }
+        meta: {title: '工单管理', icon: 'table'}
       }
     ]
   },
@@ -98,7 +134,7 @@ export const constantRoutes = [
         path: 'index',
         name: 'Form',
         component: () => import('@/views/form/index'),
-        meta: { title: 'Form', icon: 'form' }
+        meta: {title: 'Form', icon: 'form'}
       }
     ]
   },
@@ -117,31 +153,31 @@ export const constantRoutes = [
         path: 'menu1',
         component: () => import('@/views/nested/menu1/index'), // Parent router-views
         name: 'Menu1',
-        meta: { title: 'Menu1' },
+        meta: {title: 'Menu1'},
         children: [
           {
             path: 'menu1-1',
             component: () => import('@/views/nested/menu1/menu1-1'),
             name: 'Menu1-1',
-            meta: { title: 'Menu1-1' }
+            meta: {title: 'Menu1-1'}
           },
           {
             path: 'menu1-2',
             component: () => import('@/views/nested/menu1/menu1-2'),
             name: 'Menu1-2',
-            meta: { title: 'Menu1-2' },
+            meta: {title: 'Menu1-2'},
             children: [
               {
                 path: 'menu1-2-1',
                 component: () => import('@/views/nested/menu1/menu1-2/menu1-2-1'),
                 name: 'Menu1-2-1',
-                meta: { title: 'Menu1-2-1' }
+                meta: {title: 'Menu1-2-1'}
               },
               {
                 path: 'menu1-2-2',
                 component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
                 name: 'Menu1-2-2',
-                meta: { title: 'Menu1-2-2' }
+                meta: {title: 'Menu1-2-2'}
               }
             ]
           },
@@ -149,7 +185,7 @@ export const constantRoutes = [
             path: 'menu1-3',
             component: () => import('@/views/nested/menu1/menu1-3'),
             name: 'Menu1-3',
-            meta: { title: 'Menu1-3' }
+            meta: {title: 'Menu1-3'}
           }
         ]
       },
@@ -157,7 +193,7 @@ export const constantRoutes = [
         path: 'menu2',
         component: () => import('@/views/nested/menu2/index'),
         name: 'Menu2',
-        meta: { title: 'menu2' }
+        meta: {title: 'menu2'}
       }
     ]
   },
@@ -168,19 +204,19 @@ export const constantRoutes = [
     children: [
       {
         path: 'https://panjiachen.github.io/vue-element-admin-site/#/',
-        meta: { title: 'External Link', icon: 'link' }
+        meta: {title: 'External Link', icon: 'link'}
       }
     ]
   },
 
   // 404 page must be placed at the end !!!
-  { path: '*', redirect: '/404', hidden: true }
+  {path: '*', redirect: '/404', hidden: true}
 ]
 
 const createRouter = () => new Router({
   mode: 'history',
   // require service support
-  scrollBehavior: () => ({ y: 0 }),
+  scrollBehavior: () => ({y: 0}),
   routes: constantRoutes
 })
 

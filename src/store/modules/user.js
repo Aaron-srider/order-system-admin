@@ -28,20 +28,69 @@ const mutations = {
 }
 
 const actions = {
-  // user login
-  login({commit}, userInfo) {
-    const {username, password} = userInfo
+  // // user login
+  // login({commit}, userInfo) {
+  //   const {username, password} = userInfo
+  //   return new Promise((resolve, reject) => {
+  //     login({username: username.trim(), password: password}).then(response => {
+  //       const {data} = response
+  //       commit('SET_TOKEN', data.token)
+  //       setToken(data.token)
+  //       resolve()
+  //     }).catch(error => {
+  //       reject(error)
+  //     })
+  //   })
+  // },
+
+
+  // async login ({commit}, code) {
+  //
+  //   const response = await login(code)
+  //
+  //   if (response.code === 104) {
+  //     return Promise.reject(response)
+  //   } else if (response.code === 200) {
+  //     const token = response.data.detailInfo.token
+  //
+  //     console.log(token)
+  //
+  //     commit('SET_TOKEN', token)
+  //     setToken(token)
+  //
+  //     console.log("token set")
+  //     return Promise.resolve(response)
+  //   }
+  // },
+
+  login({commit}, code) {
+
+
     return new Promise((resolve, reject) => {
-      login({username: username.trim(), password: password}).then(response => {
-        const {data} = response
-        commit('SET_TOKEN', data.token)
-        setToken(data.token)
-        resolve()
-      }).catch(error => {
+      login(code)
+        .then(response => {
+
+          if (response.code === 200) {
+            const token = response.data.detailInfo.token
+
+            console.log(token)
+
+            commit('SET_TOKEN', token)
+            setToken(token)
+
+            console.log("token set")
+            resolve(response)
+          } else {
+            reject(response)
+          }
+
+
+        }).catch(error => {
         reject(error)
       })
     })
   },
+
 
   // get user info
   getInfo({commit, state}) {
