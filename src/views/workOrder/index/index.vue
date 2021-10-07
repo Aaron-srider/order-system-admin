@@ -95,13 +95,23 @@
         class-name="small-padding fixed-width"
       >
         <template slot-scope="{ row, $index }">
+
+          <router-link :to="'/workOrder/edit/'+ row.workOrderId" >
+            <el-button type="primary" size="mini" style="margin:  0 10px 0 0;">
+              编辑
+            </el-button>
+          </router-link>
+
           <el-button type="danger" size="mini" @click="handleWorkOrderDelete(row)">
             删除
           </el-button>
 
-          <el-button type="danger" size="mini" @click="handleWorkOrderInvalidation(row)">
+          <el-button type="warning" size="mini" @click="handleWorkOrderInvalidation(row)">
             作废
           </el-button>
+
+
+
           <!--<el-button-->
             <!--v-if="row.isLock == 1"-->
             <!--size="mini"-->
@@ -258,7 +268,7 @@
 
 <script>
 
-  import page from "@/views/workOrder/index.js"; // secondary package based on el-pagination
+  import page from "@/views/workOrder/index/index.js"; // secondary package based on el-pagination
 
   export default page
 

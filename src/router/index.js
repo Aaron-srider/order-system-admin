@@ -120,8 +120,15 @@ export const constantRoutes = [
       {
         path: 'list',
         name: 'Table',
-        component: () => import('@/views/workOrder/index.vue'),
-        meta: {title: '工单管理', icon: 'table'}
+        component: () => import('@/views/workOrder/index/index.vue'),
+        meta: {title: '工单列表', icon: 'table'}
+      },
+      {
+        path: 'edit/:workOrderId',
+        name: 'Table',
+        component: () => import('@/views/workOrder/edit/edit.vue'),
+        meta: {title: '工单编辑', icon: 'table'},
+        hidden: true
       }
     ]
   },

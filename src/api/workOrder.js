@@ -29,3 +29,41 @@ export function invalidateWorkOrder(workOrderId) {
   });
 }
 
+
+export function updateWorkOrder(workOrder) {
+  // debugger
+  return request({
+    url: `/admin/workOrder/${workOrder.id}`,
+    method: "put",
+    data: workOrder
+  });
+}
+
+
+export function uploadWorkOrderAttachment(workOrderId, attachmentFormData) {
+  // debugger
+  return request({
+    url: `/workOrder/attachment/${workOrderId}`,
+    method: "put",
+    data: attachmentFormData
+  });
+}
+
+export function downloadWorkOrderAttachment(workOrderId) {
+  // debugger
+  return request({
+    url: `/workOrder/attachment/${workOrderId}`,
+    method: "get",
+    responseType: "blob"
+  });
+}
+
+export function deleteWorkOrderAttachment(workOrderId) {
+  // debugger
+  return request({
+    url: `/workOrder/attachment/${workOrderId}`,
+    method: "delete"
+  });
+}
+
+
