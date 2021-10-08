@@ -21,11 +21,26 @@ export function deleteAllWorkOrdersByIdList(idList) {
   });
 }
 
-export function invalidateWorkOrder(workOrderId) {
+export function invalidateWorkOrder(idList) {
   // debugger
   return request({
-    url: `/admin/workOrder/cancellation/${workOrderId}`,
-    method: "put"
+    url: `/admin/workOrder/cancellation`,
+    method: "put",
+    data: {
+      idList:idList
+    }
+  });
+}
+
+
+export function enableWorkOrder(idList) {
+  // debugger
+  return request({
+    url: `/admin/workOrder/enablement`,
+    method: "put",
+    data: {
+      idList:idList
+    }
   });
 }
 
@@ -38,7 +53,6 @@ export function updateWorkOrder(workOrder) {
     data: workOrder
   });
 }
-
 
 export function uploadWorkOrderAttachment(workOrderId, attachmentFormData) {
   // debugger

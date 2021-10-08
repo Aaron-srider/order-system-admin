@@ -1,7 +1,7 @@
 import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
 import * as workOrderApi from "@/api/workOrder.js"; // secondary package based on el-pagination
 import {parseTime} from "@/utils/index.js"; // secondary package based on el-pagination
-import {handleWorkOrder} from "@/utils/workOrder";
+import {afterEnableWorkOrder, afterInvalidateWorkOrder, handleWorkOrder} from "@/utils/workOrder";
 
 
 let that;
@@ -12,6 +12,12 @@ export default {
 
   beforeCreate() {
     that = this
+  },
+
+  computed: {
+    rowSelected() {
+      return this.selectedItem.length > 0
+    }
   },
 
   filters: {
@@ -53,6 +59,7 @@ export default {
   components: {Pagination},
   data() {
     return {
+      selectedItem: [],
       /**
        * 通用信息：课程列表，专业列表，部门列表，年级列表
        */
@@ -166,6 +173,101 @@ export default {
   },
   methods: {
 
+    enableWorkOrder(row) {
+      const workOrderList=[]
+      workOrderList.push(row)
+      this.enableWorkOrderList(workOrderList)
+    },
+
+    /**
+     * 将传入的所有行都开启
+     * @param workOrderList 需要确保传入的所有行都是作废状态的
+     */
+    enableWorkOrderList(workOrderList) {
+      
+      const idList = workOrderList.map((item) => item.workOrderId)
+      console.log(idList)
+      workOrderApi.enableWorkOrder(idList).then((res) => {
+        for (let i = 0; i < workOrderList.length; i++) {
+          afterEnableWorkOrder(this.list, workOrderList[i])
+        }
+        this.selectedItem=[]
+        this.$refs.multipleTable.clearSelection();
+      })
+    },
+
+    handleBatchWorkOrderDelete() {
+
+      this.$confirm(`您确定要删除这${this.selectedItem.length}条工单吗?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+
+        const selectedIdList = this.selectedItem.map(item => item.workOrderId);
+
+        workOrderApi.deleteAllWorkOrdersByIdList(selectedIdList)
+          .then(res => {
+            console.log(res)
+            for (let i = 0; i < this.selectedItem.length; i++) {
+              const delIndex = this.list.findIndex((workOrder) => workOrder.workOrderId == selectedIdList[i])
+              this.list.splice(delIndex, 1)
+            }
+            this.$refs.multipleTable.clearSelection();
+            this.selectedItem = []
+            this.fetchData()
+          })
+
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });
+      });
+
+    },
+
+    handleBatchWorkOrderInvalidation() {
+
+      const selectedItemList = this.selectedItem.filter((item) => item.isFinished == 0)
+      const selectedIdList = selectedItemList.map(item => item.workOrderId)
+
+
+      this.$confirm(`您确定要作废这${selectedIdList.length}条工单吗?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+
+        console.log(selectedIdList)
+        workOrderApi.invalidateWorkOrder(selectedIdList)
+          .then(res => {
+            console.log(res)
+            for (let i = 0; i < this.selectedItem.length; i++) {
+              afterInvalidateWorkOrder(this.list, this.selectedItem[i])
+            }
+            this.$refs.multipleTable.clearSelection();
+            this.selectedItem = []
+          })
+
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消作废'
+        });
+      });
+
+
+    },
+
+    /**
+     * 将选中的row信息保存到selectedItem中
+     * @param vals 选中的所有行信息（数组）
+     */
+    handleSelectionChange(vals) {
+      this.selectedItem = vals
+    },
+
     handleWorkOrderInvalidation(row) {
       //如果工单结束，无法作废
       if (row.isFinished == 1) {
@@ -174,25 +276,18 @@ export default {
           type: 'warning'
         });
       } else {
-        workOrderApi.invalidateWorkOrder(row.workOrderId)
+        const idList = []
+        idList.push(row.workOrderId)
+        workOrderApi.invalidateWorkOrder(idList)
           .then((res) => {
 
-
-            const index = this.list.findIndex((item) => item.workOrderStatus==row.workOrderStatus)
-
-
-            const invaliatedWorkOrder=Object.assign(
-              {}, row
-            )
-            invaliatedWorkOrder.workOrderStatus=4
-            invaliatedWorkOrder.isFinished=1
-
-            this.list.splice(index, 1, invaliatedWorkOrder)
+            afterInvalidateWorkOrder(this.list, row)
 
             this.$message({
               message: '作废成功',
               type: 'success'
             });
+
           })
       }
     },
@@ -324,7 +419,7 @@ export default {
 
       const resultList = []
       for (let item of workOrderList) {
-        const workOrder=handleWorkOrder(item)
+        const workOrder = handleWorkOrder(item)
         resultList.push(workOrder)
       }
 

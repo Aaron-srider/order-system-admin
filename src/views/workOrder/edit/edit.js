@@ -241,7 +241,7 @@ export default {
               console.log(res);
               this.postForm.status = 'published'
               this.loading = false
-              // this.$router.go(0)
+              this.$router.go(0)
             });
           }
 
@@ -252,7 +252,6 @@ export default {
           //   type: 'success',
           //   duration: 2000
           // })
-
 
 
 
