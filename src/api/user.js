@@ -68,10 +68,10 @@ export function updateUser(user) {
 
   data.id = user.id;
   data.name = user.name;
-  data.roleId = user.mainRole.id;
+  data.roleId = user.mainRoleId;
   data.collegeId = user.collegeId;
 
-  if (userUtils.userCase(user.mainRole) == "student") {
+  if (userUtils.userCase_id_case(user.mainRoleId) == "student") {
     data.majorId = user.majorId;
     data.clazzName = user.clazzName;
     data.grade = user.grade;
@@ -87,3 +87,49 @@ export function updateUser(user) {
     data
   });
 }
+
+
+export function userInfoComplete(user) {
+  const data=constructRequestUserObj(user)
+
+  return request({
+    url: "/auth/userInfoCompletion",
+    method: "put",
+    data
+  });
+}
+
+function constructRequestUserObj(user) {
+  const data = {};
+
+  data.id = user.id;
+  data.name = user.name;
+  data.roleId = user.mainRoleId;
+  data.collegeId = user.collegeId;
+
+  if (userUtils.userCase_id_case(user.mainRoleId) == "student") {
+    data.majorId = user.majorId;
+    data.clazzName = user.clazzName;
+    data.grade = user.grade;
+    data.studentId = user.studentId;
+  } else {
+    data.secondaryDeptId = user.secondaryDeptId;
+    data.jobId = user.jobId;
+  }
+  return data
+}
+
+export function promote(userId) {
+  return request({
+    url: `/admin/user/promote/${userId}`,
+    method: "post",
+  });
+}
+
+export function demote(userId) {
+  return request({
+    url: `/admin/user/demote/${userId}`,
+    method: "delete",
+  });
+}
+
