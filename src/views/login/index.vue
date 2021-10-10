@@ -10,7 +10,6 @@
   export default {
     name: 'Login',
     created() {
-
       request({
         url: "/utils/wxLoginJsFile",
         params: {
@@ -40,13 +39,19 @@
     },
     watch: {
       $route: {
-        handler: function (route1) {
-          console.log(route1)
-          // console.log(route2)
-          console.log(route1.query)
-          console.log(route1.query.redirect)
-          this.redirect = route1.query && route1.query.redirect
-          this.errMsg=route1.query.errMsg
+        handler: function (route) {
+          console.log("route", route)
+          console.log(route.query.redirect)
+          this.redirect = route.query && route.query.redirect
+          this.errMsg=route.query.errMsg
+          console.log("this.redirect")
+          if(this.redirect) {
+            console.log("this.redirect", this.redirect)
+            this.$store.commit({
+              type: 'settings/STORE_REDIRECT',
+              redirect: this.redirect
+            })
+          }
         },
         immediate: true
       }

@@ -6,6 +6,17 @@
 
 <script>
 export default {
-  name: 'App'
+  name: 'App',
+  created() {
+    // debugger
+    const redirect=window.localStorage.getItem("redirect")
+    if (redirect) {
+      this.$store.commit({
+        type:"settings/STORE_REDIRECT",
+        redirect:redirect
+      })
+    }
+  }
+
 }
 </script>

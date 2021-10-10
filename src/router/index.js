@@ -37,51 +37,55 @@ export const constantRoutes = [
     component: () => import('@/views/login/index'),
     beforeEnter: (to, from, next) => {
       const code = to.query.code
+      //如果没有携带code,进入登录页面
       if (!code) {
         next()
       } else {
+        //如果携带code,访问登录接口
+        store.dispatch('user/login', code)
+          .then(
+            //登录成功，访问
+            (res) => {
+              const redirect = store.getters['settings/getRedirect']
+              const count = store.getters['settings/getCount']
+              console.log("count" + count)
+              next("/user")
+            },
+            (err) => {
+              let errMsg = ""
 
-        store.dispatch('user/login', code).then((res) => {
-          console.log("login success")
-          console.log("now redirect to : " + "/dashboard")
-          next("/dashboard")
-        }, (err) => {
-          let errMsg = ""
-          if (err.code == 101) {
-            errMsg = "您的信息未完善"
-          } else if (err.code == 116) {
-            errMsg = "您未在小程序注册过"
-          }
-          else if (err.code == 112) {
-            errMsg = "您不是管理员"
-          } else if (err.code == 119) {
-            errMsg = "您的账户已锁定"
-          }
-          next(`/login?errMsg=${errMsg}`)
-        })
+              if (err.code == 101) {
+                errMsg = "您的信息未完善"
+              } else if (err.code == 116) {
+                errMsg = "您未在小程序注册过"
+              }
+              else if (err.code == 112) {
+                errMsg = "您不是管理员"
+              } else if (err.code == 119) {
+                errMsg = "您的账户已锁定"
+              } else {
+                errMsg = err.message
+              }
+              next(`/login?errMsg=${errMsg}`)
+            })
 
       }
     },
     hidden: true
   },
 
-  // {
-  //   path: '/404',
-  //   component: () => import('@/views/404'),
-  //   hidden: false,
-  //   meta: {title: '404', icon: 'dashboard'}
-  // },
+  {
+    path: '/404',
+    component: () => import('@/views/404'),
+    hidden: true,
+    meta: {title: '404', icon: 'dashboard'}
+  },
 
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
-    children: [{
-      path: 'dashboard',
-      name: 'Dashboard',
-      component: () => import('@/views/dashboard/index'),
-      meta: {title: '后台管理系统', icon: 'dashboard'}
-    }]
+    redirect: '/user',
+    hidden: true,
   },
 
   {
@@ -95,8 +99,8 @@ export const constantRoutes = [
       {
         path: 'user',
         name: 'Table',
-        component: () => import('@/views/user/index'),
-        meta: {title: '用户管理', icon: 'table'}
+        component: () => import('@/views/user/index.vue'),
+        meta: {title: '用户管理', icon: 'el-icon-user-solid'}
       }
     ]
   },
@@ -106,14 +110,14 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/workOrder/list',
     name: 'Example',
-    meta: {title: '工单管理', icon: 'el-icon-s-help'},
+    meta: {title: '工单管理', icon: 'el-icon-s-order'},
     alwaysShow: false,
     children: [
       {
         path: 'list',
         name: 'Table',
         component: () => import('@/views/workOrder/index/index.vue'),
-        meta: {title: '工单列表', icon: 'table'}
+        meta: {title: '工单列表', icon: 'el-icon-s-order'}
       },
       {
         path: 'edit/:workOrderId',
@@ -209,7 +213,11 @@ export const constantRoutes = [
   // },
 
   // 404 page must be placed at the end !!!
-  {path: '*', redirect: '/404', hidden: true}
+  {
+    path: '*',
+    redirect: '/404',
+    hidden: true
+  }
 ]
 
 const createRouter = () => new Router({
