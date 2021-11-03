@@ -5,38 +5,37 @@
     <!--search-->
     <div class="filter-container">
 
-      <span>工单ID</span>
       <el-input
-        v-model="listQuery.workOrderId"
+        v-model="listQuery.workOrderForQuery.id"
         placeholder="工单ID"
         style="width: 130px;"
         class="filter-item"
         @keyup.enter.native="handleFilter"
       />
 
-      <span>发起人</span>
       <el-input
-        v-model="listQuery.student_job_id"
-        placeholder="学号/工号"
+        v-model="listQuery.workOrderForQuery.studentJobId"
+        placeholder="发起人学/工号"
         style="width: 130px;"
         class="filter-item"
         @keyup.enter.native="handleFilter"
       />
 
 
-      <span>发起时间</span>
       <el-date-picker
-        v-model="listQuery.startDate"
+        v-model="listQuery.workOrderForQuery.startDate"
         type="datetime"
-        placeholder="">
-      </el-date-picker>
-      ~
-
+        class="filter-item"
+        style="margin-right: 0px;"
+        placeholder="工单发起时间"
+      />
+      <i class="el-icon-minus"/>
       <el-date-picker
-        v-model="listQuery.endDate"
+        v-model="listQuery.workOrderForQuery.endDate"
         type="datetime"
-        placeholder="">
-      </el-date-picker>
+        placeholder="工单发起时间"
+        class="filter-item"
+      />
 
       <el-button
         class="filter-item"
@@ -64,9 +63,14 @@
       </div>
     </div>
 
-
     <!--data-->
-    <el-table ref="multipleTable" :data="list" border fit highlight-current-row @selection-change="handleSelectionChange">
+    <el-table style="box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04)" ref="multipleTable" :data="table.list"
+              border fit highlight-current-row
+              @selection-change="handleSelectTableRows"
+              :cell-style="tableBodyCellStyle"
+              :header-cell-style="tableHeaderCellStyle"
+
+    >
 
       <el-table-column
         label="批量操作"
@@ -81,10 +85,9 @@
       <!--</template>-->
       <!--</el-table-column>-->
 
-
       <el-table-column label="ID" width="95" align="center">
         <template slot-scope="scope">
-          {{ scope.row.workOrderId }}
+          {{ scope.row.id }}
         </template>
       </el-table-column>
 
@@ -93,6 +96,7 @@
           {{ scope.row.workOrderType }}
         </template>
       </el-table-column>
+
       <el-table-column label="发起者姓名" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.initiatorName }}</span>
@@ -114,11 +118,10 @@
       <el-table-column label="工单状态" class-name="status-col" width="100">
         <template slot-scope="{row}">
           <el-tag :type="row.workOrderStatus | statusIconFilter">
-            {{ row.workOrderStatus | statusTextFilter}}
+            {{ row | statusTextFilter}}
           </el-tag>
         </template>
       </el-table-column>
-
 
       <el-table-column
         label="Actions"
@@ -128,7 +131,7 @@
       >
         <template slot-scope="{ row, $index }">
 
-          <router-link :to="'/workOrder/edit/'+ row.workOrderId">
+          <router-link :to="'/workOrder/edit/'+ row.id">
             <el-button type="primary" size="mini" style="margin:  0 10px 0 0;">
               编辑
             </el-button>
@@ -138,7 +141,7 @@
             删除
           </el-button>
 
-          <el-button v-if="row.workOrderStatus!=4" :disabled="row.isFinished==1" type="warning" size="mini" @click="handleWorkOrderInvalidation(row)">
+          <el-button v-if="row.workOrderCancelled()" :disabled="row.workOrderFinished()" type="warning" size="mini" @click="handleWorkOrderInvalidation(row)">
             作废
           </el-button>
           <el-button v-else  type="warning" size="mini" @click="enableWorkOrder(row)">
@@ -194,13 +197,46 @@
 
 </script>
 
-<style scope>
+<style scoped>
+
+  body{
+    background-color: #eeeeee;
+  }
+
   .batchOpt {
     display: flex;
-    border-radius: 4px;
+    border-radius: 28px;
     border: 1px solid #dadce0;
     justify-content: space-between;
     padding: 16px;
     margin-bottom: 10px;
+    background-color: #ffffff;
+  }
+
+
+  /deep/ .el-input__inner{   /*或者 .s2>>>.el-input__inner  */
+    border-radius: 28px;    /*输入框圆角值*/
+  }
+
+  /deep/ .el-button{
+    border-radius: 20px;    /*输入框圆角值*/
+  }
+
+  /deep/ .el-table__row {
+    background-color: #ffffff;
+  }
+
+  /deep/ .el-table--border {
+    border: 0px solid;
+  }
+
+  /deep/ .el-table {
+    background-color:transparent;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 28px;
+  }
+
+  /deep/ .el-table::before, .el-table::after {
+    width: 0px;
   }
 </style>

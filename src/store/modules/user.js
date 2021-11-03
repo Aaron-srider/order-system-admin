@@ -71,14 +71,10 @@ const actions = {
         .then(response => {
 
           if (response.code === 200) {
-            const token = response.data.detailInfo.token
-
-            console.log(token)
+            const token = response.data.token
 
             commit('SET_TOKEN', token)
             setToken(token)
-
-            console.log("token set")
             resolve(response)
           } else {
             reject(response)

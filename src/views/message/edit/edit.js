@@ -2,16 +2,15 @@ import Tinymce from '@/components/Tinymce'
 import Upload from '@/components/Upload/SingleImage3'
 import MDinput from '@/components/MDinput'
 import Sticky from '@/components/Sticky' // 粘性header组件
+import {validURL} from '@/utils/validate'
 import Warning from './Warning'
 import {CommentDropdown, PlatformDropdown, SourceUrlDropdown} from './Dropdown'
 import * as workOrderApi from '@/api/workOrder.js'
-import {handleWorkOrder, WorkOrder} from "@/utils/workOrder";
-import {deleteWorkOrderAttachment} from "@/api/workOrder.js";
+import {handleWorkOrder} from "@/utils/workOrder";
 
 const defaultForm = {
   title: '', // 文章题目
   content: '', // 文章内容
-  status: 'unsaved'
 }
 
 export default {
@@ -25,10 +24,14 @@ export default {
   },
 
   mounted() {
-    this.workOrder.id = this.$route.params.id
-    workOrderApi.getAllWorkOrders({id: this.workOrder.id})
+
+    console.log("========edit========")
+    this.workOrderId = this.$route.params.workOrderId
+
+    workOrderApi.getAllWorkOrders({id: this.workOrderId})
       .then((res) => {
-        this.workOrder = handleWorkOrder(res.data.records[0])
+        console.log(res);
+        this.workOrder = handleWorkOrder(res.data.result.records[0])
         this.postForm.title = this.workOrder.workOrderTitle
         this.postForm.content = this.workOrder.workOrderContent
       })
@@ -63,6 +66,7 @@ export default {
     }
 
     return {
+      workOrderId: undefined,
       notifyPromise: Promise.resolve(),
       postForm: Object.assign({}, defaultForm),
       loading: false,
@@ -73,49 +77,30 @@ export default {
       tempRoute: {},
       attachmentList: [],
       uploadAttachmentList: [],
-      workOrder: new WorkOrder()
+      workOrder: {}
     }
   },
-  methods: {
-    copyurl(url) {
-      console.log(url,89898989)
-      var copyTest = url
-      var inputTest = document.createElement('input')
-      inputTest.value = copyTest
-      document.body.appendChild(inputTest)
-      inputTest.select()
-      document.execCommand('Copy')
-      inputTest.className = 'oInput'
-      inputTest.style.display = 'none'
-      this.$message.success('下载链接复制成功')
-    },
-    deleteAttachment() {
-      deleteWorkOrderAttachment(this.workOrder.id)
-        .then((res) => {
-          this.$router.go(0)
-        })
-    },
 
+  methods: {
     downloadAttachment() {
-      this.copyurl( process.env.VUE_APP_BASE_API + `/workOrder/attachment/${this.workOrder.id}/${this.workOrder.attachmentDownloadId}`)
-      // workOrderApi.downloadWorkOrderAttachment(this.workOrder.id)
-      //   .then((res) => {
-      //
-      //     const {data, headers} = res
-      //     const fileName = headers['content-disposition'].replace(/\w+; fileName=(.*)/, '$1')
-      //     // 此处当返回json文件时需要先对data进行JSON.stringify处理，其他类型文件不用做处理
-      //     //const blob = new Blob([JSON.stringify(data)], ...)
-      //     const blob = new Blob([data], {type: headers['content-type']})
-      //     let dom = document.createElement('a')
-      //     let url = window.URL.createObjectURL(blob)
-      //     dom.href = url
-      //     dom.download = decodeURI(fileName)
-      //     dom.style.display = 'none'
-      //     document.body.appendChild(dom)
-      //     dom.click()
-      //     dom.parentNode.removeChild(dom)
-      //     window.URL.revokeObjectURL(url)
-      //   })
+      workOrderApi.downloadWorkOrderAttachment(this.workOrderId)
+        .then((res) => {
+
+          const { data, headers } = res
+          const fileName = headers['content-disposition'].replace(/\w+; fileName=(.*)/, '$1')
+          // 此处当返回json文件时需要先对data进行JSON.stringify处理，其他类型文件不用做处理
+          //const blob = new Blob([JSON.stringify(data)], ...)
+          const blob = new Blob([data], {type: headers['content-type']})
+          let dom = document.createElement('a')
+          let url = window.URL.createObjectURL(blob)
+          dom.href = url
+          dom.download = decodeURI(fileName)
+          dom.style.display = 'none'
+          document.body.appendChild(dom)
+          dom.click()
+          dom.parentNode.removeChild(dom)
+          window.URL.revokeObjectURL(url)
+        })
     },
 
     /**
@@ -182,10 +167,11 @@ export default {
       this.uploadAttachmentList.forEach((item, index) => {
         attachment.append("attachment", item.raw);
       });
-      debugger
-      workOrderApi.uploadWorkOrderAttachment(this.workOrder.id,
+
+      workOrderApi.uploadWorkOrderAttachment(this.workOrder.workOrderId,
         attachment)
         .then((res) => {
+          console.log(res)
         })
     },
 
@@ -223,7 +209,7 @@ export default {
 
           const afterUpdateContent = workOrderApi.updateWorkOrder(
             {
-              id: this.workOrder.id,
+              id: this.workOrderId,
               title: this.postForm.title,
               content: this.postForm.content
             })
@@ -233,7 +219,7 @@ export default {
             let attachment = new FormData();
             attachment.append("attachment", this.uploadAttachmentList[0].raw);
             const afterUpdateAttachment = workOrderApi.uploadWorkOrderAttachment(
-              this.workOrder.id,
+              this.workOrderId,
               attachment
             )
 
@@ -242,17 +228,29 @@ export default {
               afterUpdateAttachment
             ])
               .then((values) => {
+                console.log(values);
                 this.postForm.status = 'published'
                 this.loading = false
                 this.$router.go(0)
               });
           } else {
             afterUpdateContent.then((res) => {
+              console.log(res);
               this.postForm.status = 'published'
               this.loading = false
               this.$router.go(0)
             });
           }
+
+
+          // this.$notify({
+          //   title: '成功',
+          //   message: '发布文章成功',
+          //   type: 'success',
+          //   duration: 2000
+          // })
+
+
 
         } else {
           console.log('error submit!!')

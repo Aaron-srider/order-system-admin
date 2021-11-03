@@ -42,13 +42,13 @@ export function getAllUsers(page, user) {
       size: page.size,
       current: page.current,
 
+      studentJobId: user.studentJobId,
+
       roleCategory: user.roleCategory,
       name: user.name,
       majorName: user.majorName,
       clazzName: user.className,
-      studentId: user.studentId,
       secondaryDeptName: user.secondaryDeptName,
-      jobId: user.jobId
     },
     method: "get"
     // params: { token }
@@ -64,22 +64,8 @@ export function lockUser(userId, destStatus) {
 }
 
 export function updateUser(user) {
-  const data = {};
 
-  data.id = user.id;
-  data.name = user.name;
-  data.roleId = user.mainRoleId;
-  data.collegeId = user.collegeId;
-
-  if (userUtils.userCase_id_case(user.mainRoleId) == "student") {
-    data.majorId = user.majorId;
-    data.clazzName = user.clazzName;
-    data.grade = user.grade;
-    data.studentId = user.studentId;
-  } else {
-    data.secondaryDeptId = user.secondaryDeptId;
-    data.jobId = user.jobId;
-  }
+  let data = constructRequestUserObj(user);
 
   return request({
     url: "/users",
@@ -106,15 +92,15 @@ function constructRequestUserObj(user) {
   data.name = user.name;
   data.roleId = user.mainRoleId;
   data.collegeId = user.collegeId;
+  data.studentJobId = user.studentJobId;
+
 
   if (userUtils.userCase_id_case(user.mainRoleId) == "student") {
     data.majorId = user.majorId;
     data.clazzName = user.clazzName;
     data.grade = user.grade;
-    data.studentId = user.studentId;
   } else {
     data.secondaryDeptId = user.secondaryDeptId;
-    data.jobId = user.jobId;
   }
   return data
 }

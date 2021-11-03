@@ -1,3 +1,58 @@
+function User() {
+  this.id = undefined
+  this.name = undefined
+  this.collegeId = undefined
+  this.majorId = undefined
+  this.clazzName = undefined
+  this.secondaryDeptId = undefined
+  this.grade = undefined
+  this.studentJobId = undefined
+  this.roleList = []
+  this.isLock = undefined
+  this.mainRoleId = undefined
+}
+
+User.prototype = {
+  constructor: User,
+  roleMap_id_case: [
+    "",
+    "admin",
+    "",
+    "teacher",
+    "teacher",
+    "teacher",
+    "student",
+    "student"
+  ],
+  isAdmin() {
+    if (this.roleList) {
+      for (let i = 0; i < this.roleList.length; i++) {
+        if (this.roleMap_id_case[this.roleList[i].id] == "admin") {
+          return true
+        }
+      }
+    }
+    return false
+  }
+}
+
+
+function UserForQuery() {
+  this.id = undefined
+  this.studentJobId = undefined
+  this.majorName = undefined
+  this.className = undefined
+  this.secondaryDeptName = undefined
+  this.roleCategory = undefined
+}
+
+UserForQuery.prototype = {
+  constructor: UserForQuery
+}
+
+export {User, UserForQuery}
+
+
 export function pickMainUserRole(roleList) {
   const filteredList = roleList.filter(item => item.id !== 1 && item.id !== 2);
   return filteredList[0].id;
@@ -63,43 +118,33 @@ export function userGradeMap(grade) {
  * @param userFromServer
  * @param user
  */
-export function handleUser(userFromServer, user) {
-  const basicInfo = userFromServer.result;
-  const detailInfo = userFromServer.detailInfo;
-  user.id = basicInfo.id;
-  user.name = basicInfo.name;
-  if (detailInfo.college) {
-    user.collegeName = detailInfo.college.name;
-    user.collegeId = detailInfo.college.id;
+export function handleUser(userFromServer) {
+  let user = new User()
+  user.id = userFromServer.id;
+  user.name = userFromServer.name;
+  user.collegeId = userFromServer.college.id;
+  if (userFromServer.major) {
+    user.majorId = userFromServer.major.id;
   }
-  if (detailInfo.major) {
-    user.majorName = detailInfo.major.name;
-    user.majorId = detailInfo.major.id;
+  if (userFromServer["clazzName"]) {
+    user.clazzName = userFromServer["clazzName"]
   }
-  if (basicInfo["clazzName"]) {
-    user.clazzName = basicInfo["clazzName"]
+  if (userFromServer.secondaryDept) {
+    user.secondaryDeptId = userFromServer.secondaryDept.id;
   }
-  if (detailInfo.secondaryDept) {
-    user.secondaryDeptName = detailInfo.secondaryDept.name;
-    user.secondaryDeptId = detailInfo.secondaryDept.id;
+  if (userFromServer.grade) {
+    user.grade = userFromServer.grade;
   }
-  if (basicInfo.grade) {
-    user.grade = basicInfo.grade;
-  }
-  if (basicInfo.studentId) {
-    user.studentId = basicInfo.studentId;
-  }
-  if (basicInfo.jobId) {
-    user.jobId = basicInfo.jobId;
-  }
-  user.roleList = detailInfo.roleList;
-  user.isLock = basicInfo.isLock;
+  user.studentJobId = userFromServer.studentJobId;
+  user.roleList = userFromServer.roleList;
+  user.isLock = userFromServer.isLock;
   user.mainRoleId = pickMainUserRole(user.roleList);
+  return user
 }
 
 export function afterUpdateUserRole(row) {
-  const index = row.roleList.findIndex((item) => item.id!=1 && item.id!=2)
-  row.roleList[index].id=row.mainRoleId
+  const index = row.roleList.findIndex((item) => item.id != 1 && item.id != 2)
+  row.roleList[index].id = row.mainRoleId
 }
 
 export function isAdmin(roleId) {

@@ -2,7 +2,9 @@ import Pagination from "@/components/Pagination"; // secondary package based on 
 import * as workOrderApi from "@/api/workOrder.js"; // secondary package based on el-pagination
 import {parseTime} from "@/utils/index.js"; // secondary package based on el-pagination
 import {afterEnableWorkOrder, afterInvalidateWorkOrder, handleWorkOrder} from "@/utils/workOrder";
-
+import {WorkOrder, WorkOrderForQuery} from "@/utils/workOrder";
+import {Table} from "@/views/user/page";
+import {deleteItemFromList} from "@/utils/commonUtils";
 
 let that;
 export default {
@@ -16,7 +18,7 @@ export default {
 
   computed: {
     rowSelected() {
-      return this.selectedItem.length > 0
+      return this.selectedItems.length > 0
     }
   },
 
@@ -27,16 +29,11 @@ export default {
 
     /**
      * 根据工单状态代码返回相应的文本
-     * @param workOrderStatus 工单状态代码（value）
+     * @param workOrder 工单
      * @returns 返回工单状态对应的文本（text）
      */
-    statusTextFilter(workOrderStatus) {
-      for (let commonInfo_status of that.commonInfo.workOrderStatusList) {
-        if (commonInfo_status.value == workOrderStatus) {
-          return commonInfo_status.text
-        }
-      }
-      return undefined
+    statusTextFilter(workOrder) {
+      return workOrder.status2Text();
     },
 
     /**
@@ -59,7 +56,7 @@ export default {
   components: {Pagination},
   data() {
     return {
-      selectedItem: [],
+      selectedItems: [],
       /**
        * 通用信息：课程列表，专业列表，部门列表，年级列表
        */
@@ -133,38 +130,14 @@ export default {
         }
       },
       listQuery: {
-        workOrderId: undefined,
-        student_job_id: undefined,
-        startDate: undefined,
-        endDate: undefined
+        workOrderForQuery: new WorkOrderForQuery()
       },
       page: {
         current: 1,
         total: 2,
         size: 10
       },
-      list: [
-        {
-          workOrderId: 1,
-          //流程名字
-          workOrderType: "GPU申请工单",
-          initiatorName: "文超",
-          workOrderTitle: "申请gpu",
-          workOrderStatus: 0,
-          createTime: "2021-02-11 12:21:30",
-          isFinished: 0
-        },
-        {
-          workOrderId: 2,
-          //流程名字
-          workOrderType: "GPU申请工单",
-          initiatorName: "邢铖",
-          workOrderTitle: "申请gpu",
-          workOrderStatus: 0,
-          createTime: "2021-02-21 12:21:30",
-          isFinished: 0
-        }
-      ],
+      table: new Table(8),
       userTypes: ["student", "teacher", "all"]
     };
   },
@@ -173,49 +146,46 @@ export default {
   },
   methods: {
 
-    enableWorkOrder(row) {
-      const workOrderList=[]
-      workOrderList.push(row)
-      this.enableWorkOrderList(workOrderList)
+    enableWorkOrder(workOrder2BeEnabled) {
+      this.enableWorkOrderList([workOrder2BeEnabled])
     },
 
     /**
      * 将传入的所有行都开启
-     * @param workOrderList 需要确保传入的所有行都是作废状态的
+     * @param workOrder2BeEnabledList 需要确保传入的所有行都是作废状态的
      */
-    enableWorkOrderList(workOrderList) {
-      
-      const idList = workOrderList.map((item) => item.workOrderId)
-      console.log(idList)
-      workOrderApi.enableWorkOrder(idList).then((res) => {
-        for (let i = 0; i < workOrderList.length; i++) {
-          afterEnableWorkOrder(this.list, workOrderList[i])
+    enableWorkOrderList(workOrder2BeEnabledList) {
+
+      const workOrderList2BeEnabledIdList = workOrder2BeEnabledList.map((item) => item.id)
+      workOrderApi.enableWorkOrder(workOrderList2BeEnabledIdList).then(() => {
+        for (let i = 0; i < workOrder2BeEnabledList.length; i++) {
+          workOrder2BeEnabledList[i].enable();
         }
-        this.selectedItem=[]
-        this.$refs.multipleTable.clearSelection();
+        this.afterMultipleManipulation()
       })
+    },
+
+    afterMultipleManipulation() {
+      this.selectedItems = []
+      this.$refs.multipleTable.clearSelection();
     },
 
     handleBatchWorkOrderDelete() {
 
-      this.$confirm(`您确定要删除这${this.selectedItem.length}条工单吗?`, '提示', {
+      this.$confirm(`您确定要删除这${this.selectedItems.length}条工单吗?`, '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
+        const selectedWorkOrderIdList = this.selectedItems.map(item => item.id);
 
-        const selectedIdList = this.selectedItem.map(item => item.workOrderId);
-
-        workOrderApi.deleteAllWorkOrdersByIdList(selectedIdList)
+        workOrderApi.deleteAllWorkOrdersByIdList(selectedWorkOrderIdList)
           .then(res => {
-            console.log(res)
-            for (let i = 0; i < this.selectedItem.length; i++) {
-              const delIndex = this.list.findIndex((workOrder) => workOrder.workOrderId == selectedIdList[i])
-              this.list.splice(delIndex, 1)
+            //界面上删除工单
+            for (let i = 0; i < this.selectedItems.length; i++) {
+              deleteItemFromList(this.table.list, "id", selectedWorkOrderIdList[i])
             }
-            this.$refs.multipleTable.clearSelection();
-            this.selectedItem = []
-            this.fetchData()
+            this.afterMultipleManipulation()
           })
 
       }).catch(() => {
@@ -229,73 +199,68 @@ export default {
 
     handleBatchWorkOrderInvalidation() {
 
-      const selectedItemList = this.selectedItem.filter((item) => item.isFinished == 0)
-      const selectedIdList = selectedItemList.map(item => item.workOrderId)
+      const workOrderNotFinishedYet = this.selectedItems.filter((item) => item.isFinished == 0)
+      const workOrder2BeInvalidatedIdList = workOrderNotFinishedYet.map(item => item.id)
 
 
-      this.$confirm(`您确定要作废这${selectedIdList.length}条工单吗?`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-
-        console.log(selectedIdList)
-        workOrderApi.invalidateWorkOrder(selectedIdList)
-          .then(res => {
-            console.log(res)
-            for (let i = 0; i < this.selectedItem.length; i++) {
-              afterInvalidateWorkOrder(this.list, this.selectedItem[i])
-            }
-            this.$refs.multipleTable.clearSelection();
-            this.selectedItem = []
-          })
-
-      }).catch(() => {
-        this.$message({
+      if (workOrder2BeInvalidatedIdList.length == 0) {
+        this.$confirm('没有工单可以作废', '提示', {
+          confirmButtonText: '确定',
           type: 'info',
-          message: '已取消作废'
-        });
-      });
+        showCancelButton:false
+        }).then(() => {
 
+        })
+      } else {
+        this.$confirm(`您确定要作废这${workOrder2BeInvalidatedIdList.length}条工单吗?`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+
+          workOrderApi.invalidateWorkOrder(workOrder2BeInvalidatedIdList)
+            .then(res => {
+              for (let i = 0; i < workOrderNotFinishedYet.length; i++) {
+                workOrderNotFinishedYet[i].invalidate();
+              }
+              this.afterMultipleManipulation()
+            })
+
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消作废'
+          });
+        });
+      }
 
     },
 
     /**
      * 将选中的row信息保存到selectedItem中
-     * @param vals 选中的所有行信息（数组）
+     * @param selectedTableRows 选中的所有行信息（数组）
      */
-    handleSelectionChange(vals) {
-      this.selectedItem = vals
+    handleSelectTableRows(selectedTableRows) {
+      this.selectedItems = selectedTableRows
     },
 
-    handleWorkOrderInvalidation(row) {
+    handleWorkOrderInvalidation(workOrder2BeInvalidated) {
       //如果工单结束，无法作废
-      if (row.isFinished == 1) {
+      if (workOrder2BeInvalidated.workOrderFinished()) {
         this.$message({
           message: '工单已经结束，无法作废',
           type: 'warning'
         });
       } else {
-        const idList = []
-        idList.push(row.workOrderId)
-        workOrderApi.invalidateWorkOrder(idList)
-          .then((res) => {
-
-            afterInvalidateWorkOrder(this.list, row)
-
+        workOrderApi.invalidateWorkOrder([workOrder2BeInvalidated.id])
+          .then(() => {
+            workOrder2BeInvalidated.invalidate();
             this.$message({
               message: '作废成功',
               type: 'success'
             });
-
           })
       }
-    },
-    userGradeMap(grade) {
-
-    },
-    userCase(role) {
-
     },
     updateData() {
 
@@ -328,16 +293,18 @@ export default {
       this.fetchData();
     },
     handleWorkOrderDelete(row) {
-      const id = row.workOrderId
-      const idList = []
-      //
-      idList.push(id)
-      workOrderApi.deleteAllWorkOrdersByIdList(idList)
+
+      workOrderApi.deleteAllWorkOrdersByIdList([row.id])
         .then(res => {
-          console.log(res)
-          const delIndex = this.list.findIndex((workOrder) => workOrder.workOrderId == id)
-          this.list.splice(delIndex, 1)
+          deleteItemFromList(this.table.list, "id", row.id);
         })
+    },
+    tableBodyCellStyle(obj) {
+      console.log(this.table)
+      return this.table.tableBodyCellStyle(obj)
+    },
+    tableHeaderCellStyle(obj) {
+      return this.table.tableHeaderCellStyle(obj)
     },
     handleFilter() {
       this.fetchData()
@@ -373,38 +340,32 @@ export default {
     },
 
     fetchData() {
-//
-      const query = Object.assign({}, this.listQuery)
 
-      if (query.startDate) {
-        query.startDate = parseTime(query.startDate)
+      let workOrderForQuery = new WorkOrderForQuery()
+      //装配查询对象
+      workOrderForQuery = Object.assign(workOrderForQuery, this.listQuery.workOrderForQuery)
+
+      if (workOrderForQuery.startDate) {
+        workOrderForQuery.startDate = parseTime(workOrderForQuery.startDate)
       }
-      if (query.endDate) {
-        query.endDate = parseTime(query.endDate)
+      if (workOrderForQuery.endDate) {
+        workOrderForQuery.endDate = parseTime(workOrderForQuery.endDate)
       }
 
-      query.id = this.listQuery.workOrderId
-
-      query.current = this.page.current
-
-      query.size = this.page.size
-
-
-      workOrderApi.getAllWorkOrders(query)
+      workOrderForQuery.current = this.page.current
+      workOrderForQuery.size = this.page.size
+      workOrderApi.getAllWorkOrders(workOrderForQuery)
         .then((res) => {
             //
             if (res.code == 500) {
               console.log(res)
             } else if (res.code == 200) {
               console.log(res)
-              const pageRes = res.data.result;
 
+              this.page.total = res.data.total
 
-              this.page.total = pageRes.total
-
-              const workOrderList = pageRes.records
-
-              this.list = this.handleWorkOrderPage(workOrderList)
+              const workOrderListFromServer = res.data.records
+              this.table.list = this.handleWorkOrderPage(workOrderListFromServer)
             } else {
               console.log(res.message)
             }
@@ -415,15 +376,15 @@ export default {
 
     },
 
-    handleWorkOrderPage(workOrderList) {
+    handleWorkOrderPage(workOrderListFromServer) {
 
-      const resultList = []
-      for (let item of workOrderList) {
-        const workOrder = handleWorkOrder(item)
-        resultList.push(workOrder)
+      const workOrderListOnTable = []
+      for (let oneWorkOrderFromServer of workOrderListFromServer) {
+        const workOrderAfterPrepared = handleWorkOrder(oneWorkOrderFromServer)
+        workOrderListOnTable.push(workOrderAfterPrepared)
       }
 
-      return resultList
+      return workOrderListOnTable
     },
 
     handleLockStatue(rowData, destStatus) {

@@ -47,9 +47,8 @@ export const constantRoutes = [
             //登录成功，访问
             (res) => {
               const redirect = store.getters['settings/getRedirect']
-              const count = store.getters['settings/getCount']
-              console.log("count" + count)
-              next("/user")
+              console.log("redirect:" + redirect);
+              next(redirect || "/user")
             },
             (err) => {
               let errMsg = ""
@@ -105,6 +104,8 @@ export const constantRoutes = [
     ]
   },
 
+
+
   {
     path: '/workOrder',
     component: Layout,
@@ -120,11 +121,35 @@ export const constantRoutes = [
         meta: {title: '工单列表', icon: 'el-icon-s-order'}
       },
       {
-        path: 'edit/:workOrderId',
+        path: 'edit/:id',
         name: 'Table',
         component: () => import('@/views/workOrder/edit/edit.vue'),
         meta: {title: '工单编辑', icon: 'table'},
         hidden: true
+      }
+    ]
+  },
+
+  {
+    path: '/message',
+    component: Layout,
+    redirect: '/message/message',
+    name: 'Example',
+    meta: {title: '私信管理', icon: 'el-icon-message-solid'},
+    alwaysShow: false,
+    children: [
+      {
+        path: 'message',
+        name: 'Table',
+        component: () => import('@/views/message/index/index.vue'),
+        meta: {title: '私信管理', icon: 'el-icon-message-solid'}
+      },
+      {
+        path: 'edit/:id',
+        name: 'Table',
+        component: () => import('@/views/message/edit/edit.vue'),
+        meta: {title: '私信管理', icon: 'el-icon-message-solid'},
+        hidden:true
       }
     ]
   },

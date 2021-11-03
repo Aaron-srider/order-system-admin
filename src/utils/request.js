@@ -23,7 +23,9 @@ service.interceptors.request.use(
     // }
     config.headers['token']=store.getters.token
 
-    console.log("revoke api:", `${config.method} ${config.url}`, config.headers)
+    console.log("revoke api:", `${config.method} ${config.url}`, "revoke api headers:",config.headers)
+
+    console.log("whole config:", config)
 
     return config
   },

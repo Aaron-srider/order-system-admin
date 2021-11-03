@@ -3,7 +3,7 @@
     <el-form ref="postForm" :model="postForm" :rules="rules" class="form-container">
 
       <sticky :z-index="10" :class-name="'sub-navbar ' + postForm.status">
-        <el-button v-loading="loading" style="margin-left: 10px;" type="success" @click="submitForm">
+        <el-button style="position: relative;  top:-11px;  background-color:#909399; border:0px; border-radius:5px" size="mini" round v-loading="loading"  type="success" @click="submitForm">
           保存
         </el-button>
       </sticky>
@@ -12,26 +12,29 @@
       <div class="createPost-main-container">
 
         <!-- 内容修改区 -->
-        <div class="workOrderContent">
-
+        <div class="my-common-card">
 
           <el-row>
             <el-col :span="24">
-              <div class="font24" style="margin-bottom: 16px">标题内容</div>
+              <div class="font16" >工单标题</div>
             </el-col>
           </el-row>
 
           <el-row>
             <el-col :span="24">
-              <el-form-item style="margin-bottom: 40px;" prop="title">
-                <MDinput v-model="postForm.title" :maxlength="100" name="name" required>
-                  Title
-                </MDinput>
+              <el-form-item style="margin-bottom: 20px" prop="title">
+                <MDinput v-model="postForm.title" :maxlength="100" name="name" required/>
               </el-form-item>
             </el-col>
           </el-row>
 
           <el-row>
+            <el-col :span="24">
+              <div class="font16" >工单内容</div>
+            </el-col>
+          </el-row>
+
+          <el-row style="margin-top: 8px">
             <el-col :span="24">
               <el-form-item prop="content" style="margin-bottom: 30px;">
 
@@ -49,22 +52,24 @@
 
 
         <!-- 附件修改区 -->
-        <div class="attachment">
+        <div class="my-common-card">
 
-          <div class="font24" style="margin-bottom: 16px">工单附件</div>
-          <div id="attachmentItem" >
-            <div v-if="!workOrder.attachmentName">该工单没有附件</div>
+          <div class="font26" style="margin-bottom: 16px">
+              工单附件
+          </div>
+          <div>
+            <div class="attachmentItem" v-if="!workOrder.attachmentName">该工单没有附件</div>
             <div class="attachmentItem" v-else>
               <div>
                 <h4>
-                  {{workOrder.attachmentName}}
+                  {{ workOrder.attachmentName }}
                 </h4>
-                <span>{{workOrder.attachmentSize}}KB</span>
+                <span>{{ workOrder.attachmentSize }}KB</span>
               </div>
 
               <div class="opt">
                 <el-button @click="downloadAttachment()" type="primary" icon="el-icon-download" circle/>
-                <el-button @click="downloadAttachment()" type="danger" icon="el-icon-delete" circle/>
+                <el-button @click="deleteAttachment()" type="danger" icon="el-icon-delete" circle/>
               </div>
             </div>
           </div>
@@ -103,89 +108,98 @@
 
 <script>
 
-  import page from "./edit.js"
+import page from "./edit.js"
 
-  export default page
+export default page
 
 </script>
 
-<style lang="scss" scoped>
-  @import "~@/styles/mixin.scss";
+<style scoped>
 
-  .attachment {
-    border: 1px solid #dadce0;
-    border-radius: 5px;
-    padding: 16px;
-  }
+/*标题输入框圆角*/
+/deep/ .material-input__component {
+  border-radius: 15px
+}
 
-  .attachmentItem {
-    margin-bottom: 16px;
-    padding: 16px;
-    display: flex;
-    border-radius: 5px;
-    border: 1px solid #dadce0;
-    /*border-style: solid;*/
-    justify-content: space-between;
-  }
+/deep/ .material-input__component .material-input {
+  border-bottom: 1px solid transparent;
+  padding: 5px 12px 5px 12px;
+}
 
-  .createPost-container {
-    position: relative;
+/deep/ .material-input__component {
+  margin-top: 8px;
+}
 
-    .createPost-main-container {
-      padding: 40px 45px 20px 50px;
 
-      .postInfo-container {
-        position: relative;
-        @include clearfix;
-        margin-bottom: 10px;
 
-        .postInfo-container-item {
-          float: left;
-        }
-      }
-    }
+.attachmentArea {
+  border: 1px solid #dadce0;
+  border-radius: 5px;
+  padding: 16px;
+}
 
-    .word-counter {
-      width: 40px;
-      position: absolute;
-      right: 10px;
-      top: 0px;
-    }
-  }
+.attachmentItem {
+  margin-bottom: 16px;
+  padding: 16px;
+  display: flex;
+  border-radius: 5px;
+  border: 1px solid #dadce0;
+  /*border-style: solid;*/
+  justify-content: space-between;
+}
 
-  .article-textarea ::v-deep {
-    textarea {
-      padding-right: 40px;
-      resize: none;
-      border: none;
-      border-radius: 0px;
-      border-bottom: 1px solid #bfcbd9;
-    }
-  }
 
-  h4 {
-    font-family: Roboto, Helvetica, Arial, sans-serif;
-    font-weight: 400;
-    border: 0;
-    padding: 0;
-    margin: 0;
-  }
+h4 {
 
-  .opt {
-    color: #3a8ee6;
-  }
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
 
-  .font24 {
-    font-size: 24px;
-  }
+.opt {
+  color: #3a8ee6;
+}
 
-  .workOrderContent {
-    border: 1px solid #dadce0;
-    border-radius: 5px;
-    padding: 16px;
+.font24 {
+  font-size: 24px;
+}
 
-    margin-bottom: 16px;
-  }
+.font16 {
+  font-size: 16px;
+}
 
+.my-common-card {
+  border: 0px solid;
+  border-radius: 15px;
+  padding: 16px;
+  margin: 16px;
+  background-color: #eeeeee;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)
+}
+
+
+/*内容输入框圆角、内边距*/
+/deep/ .el-textarea__inner {
+  border-radius: 15px;
+  padding: 5px 12px;
+  border: 0px
+}
+
+
+.myButton{
+  border-radius:20px
+}
+
+/deep/ .uploadArea>.el-upload {
+  display: block;
+}
+
+
+/deep/ .uploadArea>.el-upload>.el-upload-dragger {
+  width: auto;
+  /*height: 180px;*/
+}
 
 </style>

@@ -28,13 +28,10 @@ const mutations = {
 
 }
 
-
 const getters = {
   getRedirect: state => {
+    console.log("getters: " + state.redirect)
     return state.redirect
-  },
-  getCount: state => {
-    return state.count
   }
 }
 
@@ -48,6 +45,7 @@ export default {
   namespaced: true,
   state,
   mutations,
-  actions
+  actions,
+  getters
 }
 
