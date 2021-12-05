@@ -137,6 +137,7 @@ export const constantRoutes = [
     name: 'Example',
     meta: {title: '私信管理', icon: 'el-icon-message-solid'},
     alwaysShow: false,
+    hidden: true,
     children: [
       {
         path: 'message',
